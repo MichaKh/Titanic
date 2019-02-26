@@ -1,4 +1,9 @@
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+
 import DataPreProcessor
+from Evaluator import Evaluator
+from LabelPredictorUtils import prepare_data
 
 
 def main():
@@ -34,6 +39,20 @@ def main():
     print('Saving cleaned test data to file...')
     cleaned_test_data_df.to_csv("clean_test.csv", index=False)
 
+    eval_classifiers = {'TreeClassifier': DecisionTreeClassifier(criterion="gini",
+                                                                 splitter="best",
+                                                                 max_depth=None,
+                                                                 random_state=42),
+                        'LogisticRegression': LogisticRegression(penalty='l2', max_iter=None, random_state=42)}
 
-if __name__ == '__main__':
-    main()
+    train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
+    test_X, test_y = prepare_data(cleaned_test_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
+    evaluator = Evaluator(train_X, train_y, test_X, test_y,  eval_classifiers)
+    all_predictions, final_prediction = evaluator.build_models()
+    evaluation_df = evaluator.save_predictions_to_df(all_predictions, final_prediction)
+    evaluation_df.to_csv("test_evaluation_results.csv", index=False)
+    accuracy = evaluator.evaluate_performance(final_prediction, performance_metric='accuracy')
+    print('accuracy for ensemble models {} is: {}'.format(eval_classifiers.keys(), accuracy))
+
+    if __name__ == '__main__':
+        main()
