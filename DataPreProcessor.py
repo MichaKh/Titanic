@@ -2,6 +2,7 @@ import re
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def load_data(data_file_path):
@@ -38,8 +39,20 @@ def clean_data(data_df, data_types):
 
     cleaned_data_df = check_for_missing_values(cleaned_data_df)
     cleaned_data_df = verify_data_types(cleaned_data_df, data_types)
+
     assert all(col for col in ~cleaned_data_df.isnull())
+
+    plot_survival_hist(cleaned_data_df['Survived'])
     return cleaned_data_df
+
+
+def plot_survival_hist(survival_data):
+    survival_hist = survival_data.value_counts().sort_index().plot(kind="bar", alpha=0.5)
+    plt.title("Titanic Survival Histogram")
+    plt.xlabel("Survived?")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.show()
 
 
 def verify_data_types(data_df, data_types):
