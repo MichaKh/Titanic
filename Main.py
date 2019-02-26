@@ -8,7 +8,7 @@ from LabelPredictorUtils import prepare_data
 
 def main():
     data_train_file_path = 'train.csv'
-    data_test_file_path = 'test.csv'
+    data_test_file_path = 'test_with_label.csv'
     data_types = {'Survived': 'Categorical',
                   'Pclass': 'Categorical',
                   'Name_Affiliation': 'Categorical',
@@ -43,16 +43,19 @@ def main():
                                                                  splitter="best",
                                                                  max_depth=None,
                                                                  random_state=42),
-                        'LogisticRegression': LogisticRegression(penalty='l2', max_iter=None, random_state=42)}
+                        'LogisticRegression': LogisticRegression(penalty='l2', max_iter=1000, random_state=42)}
 
     train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
     test_X, test_y = prepare_data(cleaned_test_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
     evaluator = Evaluator(train_X, train_y, test_X, test_y,  eval_classifiers)
     all_predictions, final_prediction = evaluator.build_models()
     evaluation_df = evaluator.save_predictions_to_df(all_predictions, final_prediction)
+    submission_df = evaluator.save_predictions_for_submission(evaluation_df)
     evaluation_df.to_csv("test_evaluation_results.csv", index=False)
+    submission_df.to_csv("test_submission.csv", index=False)
     accuracy = evaluator.evaluate_performance(final_prediction, performance_metric='accuracy')
     print('accuracy for ensemble models {} is: {}'.format(eval_classifiers.keys(), accuracy))
 
-    if __name__ == '__main__':
-        main()
+
+if __name__ == '__main__':
+    main()

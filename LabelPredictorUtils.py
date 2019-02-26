@@ -18,6 +18,6 @@ def split_features_and_label(train_data_df, class_col, features_cols):
 def encode_features(train_X):
     le = LabelEncoder()
     for col in train_X.columns:
-        if train_X[col].dtype not in [np.float64, np.int64]:  # numeric
-            train_X[col] = le.fit_transform(train_X[col])
+        if train_X[col].dtype not in [np.float64, np.int64, np.int32, np.float32]:  # not numeric
+            train_X.loc[:, col] = le.fit_transform(train_X[col])
     return train_X

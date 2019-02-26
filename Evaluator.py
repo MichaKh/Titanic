@@ -25,7 +25,7 @@ class Evaluator:
             predictor = LabelPredictor(self.train_X, self.train_y, clf)
             trained_clf = predictor.train_classifier(classifier_name=classifier,
                                                      classifier=clf)
-            predictions = predictor.predict_with_classifier(classifier_name=classifier,
+            predictions = predictor.predict_with_classifier(test_X=self.test_X, classifier_name=classifier,
                                                             classifier=trained_clf)
             all_predictions[classifier + '_pred'] = predictions
         final_prediction = self.get_ensemble_majority_vote(all_predictions)
@@ -35,7 +35,7 @@ class Evaluator:
     def get_ensemble_majority_vote(all_predictions):
         majority_vote_pred = []
         # zip all lists
-        zipped_list = zip(*all_predictions)
+        zipped_list = zip(*all_predictions.values())
         for l in zipped_list:
             maj_vote = max(l, key=l.count)
             majority_vote_pred.append(maj_vote)
@@ -56,7 +56,14 @@ class Evaluator:
         eval_df = eval_df.append(self.test_X)
         eval_df['Survived'] = self.test_y
         for clf_pred in all_predictions:
-            eval_df[clf_pred] = all_predictions[clf_pred]
-        eval_df['Survived_pred'] = final_prediction
+            pred_col = all_predictions[clf_pred]
+            eval_df[clf_pred] = pred_col.values
+        eval_df['Survived_pred'] = final_prediction.values
         return eval_df
 
+    @staticmethod
+    def save_predictions_for_submission(eval_df):
+        submission_df = pd.DataFrame()
+        submission_df['PassengerId'] = eval_df.index
+        submission_df['Survived'] = eval_df['Survived_pred'].values
+        return submission_df
