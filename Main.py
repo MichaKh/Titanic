@@ -1,5 +1,8 @@
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
 
 import DataPreProcessor
 from Evaluator import Evaluator
@@ -39,11 +42,14 @@ def main():
     print('Saving cleaned test data to file...')
     cleaned_test_data_df.to_csv("clean_test.csv", index=False)
 
-    eval_classifiers = {'TreeClassifier': DecisionTreeClassifier(criterion="gini",
-                                                                 splitter="best",
-                                                                 max_depth=None,
-                                                                 random_state=42),
-                        'LogisticRegression': LogisticRegression(penalty='l2', max_iter=1000, random_state=42)}
+    eval_classifiers = {
+        'TreeClassifier': DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=None, random_state=42),
+        'LogisticRegression': LogisticRegression(penalty='l2', max_iter=1000, random_state=42),
+        'RandomForestClassifier': RandomForestClassifier(n_estimators=1000, max_depth=6, random_state=42),
+        'NaiveBayes': GaussianNB(),
+        'GBTrees': GradientBoostingClassifier(learning_rate=0.1, n_estimators=1000, random_state=42, min_samples_split=2, max_depth=6),
+        'xgboost': XGBClassifier(max_depth=6, n_estimators=1000, random_state=42, learning_rate=0.1, min_samples_split=2)
+    }
 
     train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
     test_X, test_y = prepare_data(cleaned_test_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])

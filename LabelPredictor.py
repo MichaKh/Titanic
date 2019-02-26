@@ -15,7 +15,7 @@ class LabelPredictor:
     def train_classifier(self, classifier_name, classifier):
         print('Training classifier: {}'.format(classifier_name))
         start_time = time.time()
-        if not classifier:
+        if classifier is None:
             return None
         else:
             classifier.fit(self.train_X, self.train_y)

@@ -45,8 +45,8 @@ class Evaluator:
         performance_metrics = {
             'accuracy': lambda actual, pred: accuracy_score(actual, pred, normalize=True),
             'f1': lambda actual, pred: f1_score(actual, pred, average='micro'),
-            'auc': lambda actual, pred: metrics.auc(metrics.roc_curve(actual, pred, pos_label=2)[0],
-                                                    metrics.roc_curve(actual, pred, pos_label=2)[1])
+            'auc': lambda actual, pred: metrics.auc(metrics.roc_curve(actual, pred, pos_label=1)[0],
+                                                    metrics.roc_curve(actual, pred, pos_label=1)[1])
         }
 
         return performance_metrics[performance_metric](self.test_y, pred_y)
