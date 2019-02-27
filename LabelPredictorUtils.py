@@ -3,6 +3,14 @@ import numpy as np
 
 
 def prepare_data(train_data_df, class_col, features_cols):
+    """
+    Split the data to features and label column, i.e., X and y.
+    Encode the categorical feautres to numeric encoding (to fit "sklearn" implementations)
+    :param train_data_df: Input data
+    :param class_col: Column name representing the class label
+    :param features_cols: Column names representing the data features
+    :return: Dataframes of X and y.
+    """
     data_X, data_y = split_features_and_label(train_data_df, class_col, features_cols)
     data_X = encode_features(data_X)
     return data_X, data_y

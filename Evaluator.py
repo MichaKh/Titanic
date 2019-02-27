@@ -33,6 +33,11 @@ class Evaluator:
 
     @staticmethod
     def get_ensemble_majority_vote(all_predictions):
+        """
+        Get majority vote of all predictions of built classifiers.
+        :param all_predictions: Prediction vectors of all trained classifiers.
+        :return: Series of final majority vote prediction
+        """
         majority_vote_pred = []
         # zip all lists
         zipped_list = zip(*all_predictions.values())
@@ -42,6 +47,13 @@ class Evaluator:
         return pd.Series(majority_vote_pred)
 
     def evaluate_performance(self, pred_y, performance_metric='accuracy'):
+        """
+        Evaluate the performance of predictions on a hold out test set with known class labels.
+        Three performance measures are supported: accuracy (default), f1-score and AUC.
+        :param pred_y: Predicted class label
+        :param performance_metric: One of three performance measures: accuracy, f1-score and AUC
+        :return: Float value of performance
+        """
         performance_metrics = {
             'accuracy': lambda actual, pred: accuracy_score(actual, pred, normalize=True),
             'f1': lambda actual, pred: f1_score(actual, pred, average='micro'),
@@ -63,6 +75,12 @@ class Evaluator:
 
     @staticmethod
     def save_predictions_for_submission(eval_df):
+        """
+        Save predictions for submission in Kaggle.
+        The submission consists of the PassangerId and whether he survived the accident.
+        :param eval_df: Prediction Dataframe
+        :return: Dataframe for submission
+        """
         submission_df = pd.DataFrame()
         submission_df['PassengerId'] = eval_df.index
         submission_df['Survived'] = eval_df['Survived_pred'].values

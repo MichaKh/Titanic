@@ -1,5 +1,6 @@
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
 
@@ -43,10 +44,11 @@ def main():
 
     eval_classifiers = {
         'TreeClassifier': DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=4, random_state=42),
-        'LogisticRegression': LogisticRegression(penalty='l2', max_iter=100, random_state=42),
+        'LogisticRegression': LogisticRegression(penalty='l1', max_iter=100, random_state=42),
         'RandomForestClassifier': RandomForestClassifier(n_estimators=1000, max_depth=4, random_state=42),
         'GBTrees': GradientBoostingClassifier(max_depth=4, learning_rate=0.1, n_estimators=1000, random_state=42, min_samples_split=2),
-        'xgboost': XGBClassifier(max_depth=4, n_estimators=1000, random_state=42, learning_rate=0.1, min_samples_split=2)
+        'xgboost': XGBClassifier(max_depth=4, n_estimators=1000, random_state=42, learning_rate=0.1, min_samples_split=2),
+        'KNN': KNeighborsClassifier(n_neighbors=4, p=2)
     }
 
     train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
