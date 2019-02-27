@@ -1,4 +1,3 @@
-# Titanic
 Titanic disaster classification problem (from Kaggle)
 =====================================================
 
