@@ -51,8 +51,8 @@ def main():
         'KNN': KNeighborsClassifier(n_neighbors=4, p=2)
     }
 
-    train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
-    test_X, test_y = prepare_data(cleaned_test_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
+    train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age_Intevals', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
+    test_X, test_y = prepare_data(cleaned_test_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age_Intevals', 'SibSp', 'Parch', 'Fare', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
     evaluator = Evaluator(train_X, train_y, test_X, test_y,  eval_classifiers)
     all_predictions, final_prediction = evaluator.build_models()
     evaluation_df = evaluator.save_predictions_to_df(all_predictions, final_prediction)

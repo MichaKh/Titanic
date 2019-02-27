@@ -20,12 +20,13 @@ def clean_data(data_df, data_types):
     """
     cleaned_data_df = data_df.copy()
     # Separate last name from first name and affiliation
-    data_names = cleaned_data_df['Name'].apply(lambda name: get_affiliation_first_last_name(name)).apply(pd.Series)
+    data_names = cleaned_data_df[['Name', 'Sex']].apply(lambda row: get_affiliation_first_last_name(row), axis=1).apply(pd.Series)
     data_names.columns = ['Name_Affiliation', 'Last_Name', 'First_Name']
     cleaned_data_df = pd.concat([cleaned_data_df[:], data_names.apply(pd.Series)[:]], axis=1)
     cleaned_data_df = cleaned_data_df.drop(labels=['Name'], axis=1)
     # Correct age
     cleaned_data_df['Age'] = cleaned_data_df['Age'].apply(lambda age: round_age(age))
+    cleaned_data_df['Age_Intervals'] = cleaned_data_df['Age'].apply(lambda age: get_discrete_age_intervals(age))
     # Separate ticket number from ticket code
     data_tickets = cleaned_data_df['Ticket'].apply(lambda ticket: get_ticket_code_and_number(ticket)).apply(pd.Series)
     data_tickets.columns = ['Ticket_Code', 'Ticket_Number']
@@ -106,20 +107,29 @@ def get_affiliation_first_last_name(x):
     :param x: Name
     :return: [<Personal affiliation>, <Last Name>, <First Name>]
     """
-    if (not x) or (',' not in x):
+    if (not x['Name']) or (',' not in x['Name']):
         return ['Unknown', 'Unknown', 'Unknown']
     else:
-        name = x.split(',')
+        name = x['Name'].split(',')
+        sex = x['Sex'] if x['Sex'] else 'female'
         last_name = name[0].strip()
         first_name_with_affiliation = name[1]
         first_name_with_affiliation_list = first_name_with_affiliation.split('.')
         first_name = first_name_with_affiliation_list[1].split('(')[0].strip()
         if not first_name:
             first_name = 'Unknown'
-        if '.' not in x:
+        if '.' not in x['Name']:
             affiliation = 'Unknown'
         else:
             affiliation = first_name_with_affiliation_list[0].strip().replace('.', '')
+            if affiliation in ['Capt', 'Don', 'Major', 'Sir', 'Jonkheer', 'Rev', 'Col', 'Master']:
+                affiliation = 'Master'
+            elif affiliation in ['the Countess', 'Mlle', 'Mme']:
+                affiliation = 'Mrs'
+            elif affiliation in ['Mlle', 'Ms', 'Lady', 'Miss']:
+                affiliation = 'Miss'
+            elif affiliation in ['Dr']:
+                affiliation = 'Mr' if sex == 'male' else 'Mrs'
         return [affiliation, last_name, first_name]
 
 
@@ -128,6 +138,20 @@ def round_age(age):
         return int(np.ceil(age))
     except ValueError:
         return
+
+
+def get_discrete_age_intervals(age):
+    try:
+        rounded_age = int(np.ceil(age))
+        if rounded_age <= 20:
+            return 'Young'
+        elif 20 < rounded_age <= 65:
+            return 'Adult'
+        else:
+            return 'Elderly'
+    except ValueError:
+        return
+
 
 
 def get_ticket_code_and_number(x):
