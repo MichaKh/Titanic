@@ -43,6 +43,7 @@ def clean_data(data_df, data_types):
     assert all(col for col in ~cleaned_data_df.isnull())
 
     plot_survival_hist(cleaned_data_df['Survived'])
+    plot_gender_survival_hist(cleaned_data_df[['Sex', 'Survived']])
     return cleaned_data_df
 
 
@@ -52,6 +53,15 @@ def plot_survival_hist(survival_data):
     plt.xlabel("Survived?")
     plt.ylabel("Frequency")
     plt.legend()
+    plt.show()
+
+
+def plot_gender_survival_hist(survival_data):
+    ax = survival_data.groupby(['Sex', 'Survived']).size().unstack().plot(kind='bar', stacked=True)
+    plt.title("Titanic Gender Survival Histogram")
+    plt.xlabel("Sex")
+    plt.ylabel("Frequency")
+    ax.legend(["Not Survived", "Survived"])
     plt.show()
 
 
