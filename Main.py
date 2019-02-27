@@ -10,8 +10,8 @@ from LabelPredictorUtils import prepare_data
 
 
 def main():
-    data_train_file_path = 'train.csv'
-    data_test_file_path = 'test_with_label.csv'
+    data_train_file_path = 'Data/train.csv'
+    data_test_file_path = 'Data/test_with_label.csv'
     data_types = {'Survived': 'Categorical',
                   'Pclass': 'Categorical',
                   'Name_Affiliation': 'Categorical',
