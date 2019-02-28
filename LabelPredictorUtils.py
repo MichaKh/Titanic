@@ -1,5 +1,6 @@
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import numpy as np
+import pandas as pd
 
 
 def prepare_data(train_data_df, class_col, features_cols):
@@ -13,6 +14,7 @@ def prepare_data(train_data_df, class_col, features_cols):
     """
     data_X, data_y = split_features_and_label(train_data_df, class_col, features_cols)
     data_X = encode_features(data_X)
+    # data_X = encode_one_hot_features(data_X)
     return data_X, data_y
 
 
@@ -29,3 +31,14 @@ def encode_features(train_X):
         if train_X[col].dtype not in [np.float64, np.int64, np.int32, np.float32]:  # not numeric
             train_X.loc[:, col] = le.fit_transform(train_X[col])
     return train_X
+
+
+def encode_one_hot_features(train_X):
+    encoded_train_X = pd.DataFrame()
+    for col in train_X.columns:
+        if train_X[col].dtype not in [np.float64, np.int64, np.int32, np.float32]:  # not numeric
+            encoded = pd.get_dummies(train_X[col], prefix=col, drop_first=False)
+            encoded_train_X = pd.concat([encoded_train_X, encoded], axis=1)
+        else:
+            encoded_train_X = pd.concat([encoded_train_X, train_X[col]], axis=1)
+    return encoded_train_X

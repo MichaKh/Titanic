@@ -39,9 +39,20 @@ class Evaluator:
             predictor = LabelPredictor(self.train_X, self.train_y, clf)
             trained_clf = predictor.train_classifier(classifier_name=classifier,
                                                      classifier=clf)
-            predictions = predictor.predict_with_classifier(test_X=self.test_X, classifier_name=classifier,
-                                                            classifier=trained_clf)
-            all_predictions[classifier + '_pred'] = predictions
+            # Predict on test set
+            test_predictions = predictor.predict_with_classifier(test_X=self.test_X, classifier_name=classifier,
+                                                                 classifier=trained_clf)
+            all_predictions[classifier + '_pred'] = test_predictions
+            curr_model_performance = self.evaluate_performance(self.test_y, test_predictions)
+            print("Aaccuracy of {} alone on test set:{}".format(classifier, curr_model_performance))
+
+            # Predict on train set
+            test_predictions = predictor.predict_with_classifier(test_X=self.train_X, classifier_name=classifier,
+                                                                 classifier=trained_clf)
+            curr_model_performance = self.evaluate_performance(self.train_y, test_predictions)
+            print("Aaccuracy of {} alone on train set:{}".format(classifier, curr_model_performance))
+
+            print('-'*68)
         final_prediction = self.get_ensemble_majority_vote(all_predictions)
         return all_predictions, final_prediction
 
@@ -60,7 +71,7 @@ class Evaluator:
             majority_vote_pred.append(maj_vote)
         return pd.Series(majority_vote_pred)
 
-    def evaluate_performance(self, pred_y, performance_metric='accuracy'):
+    def evaluate_performance(self, actual_y, pred_y, performance_metric='accuracy'):
         """
         Evaluate the performance of predictions on a hold out test set with known class labels.
         Three performance measures are supported: accuracy (default), f1-score and AUC.
@@ -75,7 +86,7 @@ class Evaluator:
                                                     metrics.roc_curve(actual, pred, pos_label=1)[1])
         }
 
-        return performance_metrics[performance_metric](self.test_y, pred_y)
+        return performance_metrics[performance_metric](actual_y, pred_y)
 
     def save_predictions_to_df(self, all_predictions, final_prediction):
         eval_df = pd.DataFrame()

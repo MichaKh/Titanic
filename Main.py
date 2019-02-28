@@ -52,11 +52,11 @@ def main():
         'xgboost': XGBClassifier(max_depth=6, n_estimators=1000, random_state=42, learning_rate=0.1, min_samples_split=2),
         'KNN': KNeighborsClassifier(n_neighbors=3, p=2),
         'SVM': SVC(gamma='auto', tol=1e-3, C=1.5, random_state=42),
-        # 'Perceptron': Perceptron(tol=1e-3, random_state=42),
     }
-
-    train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age_Intevals', 'Family_Members', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
-    test_X, test_y = prepare_data(cleaned_test_data_df, class_col='Survived', features_cols=['Pclass', 'Sex', 'Age_Intevals', 'Family_Members', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor'])
+    # features_cols = ['Pclass', 'Sex', 'Age_Intevals', 'Family_Members', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor']
+    features_cols = ['Pclass', 'Sex', 'Age_Intevals', 'is_Traveling_Alone', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Cabin_Floor']
+    train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols= features_cols)
+    test_X, test_y = prepare_data(cleaned_test_data_df, class_col='Survived', features_cols=features_cols)
     evaluator = Evaluator(train_X, train_y, test_X, test_y,  eval_classifiers)
     # evaluator.select_features(selection_clf=ExtraTreesClassifier(n_estimators=1000, max_depth=4, random_state=42))
 
@@ -65,7 +65,7 @@ def main():
     submission_df = evaluator.save_predictions_for_submission(evaluation_df)
     evaluation_df.to_csv("test_evaluation_results.csv", index=False)
     submission_df.to_csv("test_submission.csv", index=False)
-    accuracy = evaluator.evaluate_performance(final_prediction, performance_metric='accuracy')
+    accuracy = evaluator.evaluate_performance(test_y, final_prediction, performance_metric='accuracy')
     print('Accuracy for ensemble models {} is: {}'.format(eval_classifiers.keys(), accuracy))
 
 

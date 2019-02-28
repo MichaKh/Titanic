@@ -27,6 +27,8 @@ def clean_data(data_df, data_types):
 
     # Calculate the number of traveling family members
     cleaned_data_df['Family_Members'] = cleaned_data_df[['SibSp', 'Parch']].apply(lambda sib_parch: get_num_of_family_members(sib_parch), axis=1)
+    # Determine whether the passenger is traveling alone
+    cleaned_data_df['is_Traveling_Alone'] = cleaned_data_df[['Family_Members']].apply(lambda family: get_is_traveling_alone(family), axis=1)
 
     # Correct age
     cleaned_data_df['Age'] = cleaned_data_df['Age'].apply(lambda age: round_age(age))
@@ -169,6 +171,15 @@ def get_num_of_family_members(x):
     parch = parch if not np.isnan(parch) else 0
 
     return sib_sp + parch + 1
+
+
+def get_is_traveling_alone(x):
+    num_family_members = x['Family_Members']
+    num_family_members = num_family_members if not np.isnan(num_family_members) else 0
+    if num_family_members == 1:
+        return 'Alone'
+    else:
+        return 'Not_Alone'
 
 
 def get_fare_per_passenger(x):
