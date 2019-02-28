@@ -24,14 +24,23 @@ def clean_data(data_df, data_types):
     data_names.columns = ['Name_Affiliation', 'Last_Name', 'First_Name']
     cleaned_data_df = pd.concat([cleaned_data_df[:], data_names.apply(pd.Series)[:]], axis=1)
     cleaned_data_df = cleaned_data_df.drop(labels=['Name'], axis=1)
+
+    # Calculate the number of traveling family members
+    cleaned_data_df['Family_Members'] = cleaned_data_df[['SibSp', 'Parch']].apply(lambda sib_parch: get_num_of_family_members(sib_parch), axis=1)
+
     # Correct age
     cleaned_data_df['Age'] = cleaned_data_df['Age'].apply(lambda age: round_age(age))
     cleaned_data_df['Age_Intervals'] = cleaned_data_df['Age'].apply(lambda age: get_discrete_age_intervals(age))
+
+    # Calculate total fare per passenger
+    cleaned_data_df['Fare_Per_Passenger'] = cleaned_data_df[['Fare', 'Family_Members']].apply(lambda fare_family: get_fare_per_passenger(fare_family), axis=1)
+
     # Separate ticket number from ticket code
     data_tickets = cleaned_data_df['Ticket'].apply(lambda ticket: get_ticket_code_and_number(ticket)).apply(pd.Series)
     data_tickets.columns = ['Ticket_Code', 'Ticket_Number']
     cleaned_data_df = pd.concat([cleaned_data_df[:], data_tickets.apply(pd.Series)[:]], axis=1)
     cleaned_data_df = cleaned_data_df.drop(labels=['Ticket'], axis=1)
+
     # Separate cabin floor from number
     data_cabins = cleaned_data_df['Cabin'].apply(lambda cabin: get_cabin_floor_and_number(cabin)).apply(pd.Series)
     data_cabins.columns = ['Cabin_Floor', 'Cabin_Rooms']
@@ -153,6 +162,22 @@ def get_discrete_age_intervals(age):
         return
 
 
+def get_num_of_family_members(x):
+    sib_sp = x['SibSp']  # num of siblings or spouses
+    parch = x['Parch']  # num of parents or children
+    sib_sp = sib_sp if not np.isnan(sib_sp) else 0
+    parch = parch if not np.isnan(parch) else 0
+
+    return sib_sp + parch
+
+
+def get_fare_per_passenger(x):
+    total_fare = x['Fare']
+    num_of_family_members = x['Family_Members']
+    total_fare = total_fare if not np.isnan(total_fare) else 0
+    num_of_family_members = num_of_family_members if not np.isnan(num_of_family_members) else 1
+    return int(total_fare / (num_of_family_members + 1))
+
 
 def get_ticket_code_and_number(x):
     """
@@ -189,7 +214,15 @@ def get_cabin_floor_and_number(x):
         all_cabin_nums = x.split(' ')
         for cabin in all_cabin_nums:
             split_cabin_num = re.findall(r'[^\W\d_]+|\d+', cabin)
-            all_assigned_cabins.append(split_cabin_num[0].strip())
+            deck = split_cabin_num[0].strip()
+            if deck in ['S', 'A', 'B', 'C', 'D']:
+                all_assigned_cabins.append('Upper')
+            elif deck in ['E']:
+                all_assigned_cabins.append('Main')
+            elif deck in ['F']:
+                all_assigned_cabins.append('Middle')
+            else:
+                all_assigned_cabins.append('Lower')
             if len(split_cabin_num) == 1:
                 all_assigned_cabin_numbers.append('0')
             else:
