@@ -159,7 +159,7 @@ def get_discrete_age_intervals(age):
         else:
             return 'Elderly'
     except ValueError:
-        return
+        return 'Adult'
 
 
 def get_num_of_family_members(x):
@@ -168,7 +168,7 @@ def get_num_of_family_members(x):
     sib_sp = sib_sp if not np.isnan(sib_sp) else 0
     parch = parch if not np.isnan(parch) else 0
 
-    return sib_sp + parch
+    return sib_sp + parch + 1
 
 
 def get_fare_per_passenger(x):

@@ -1,5 +1,9 @@
 from sklearn import metrics
 import pandas as pd
+from sklearn.feature_selection import SelectFromModel
+from sklearn.linear_model import LassoCV
+from sklearn.svm import LinearSVC
+
 from LabelPredictor import LabelPredictor
 from sklearn.metrics import accuracy_score, f1_score
 
@@ -17,6 +21,16 @@ class Evaluator:
         self.test_X = test_X
         self.test_y = test_y
         self.eval_classifiers = eval_classifiers
+
+    def select_features(self, selection_clf):
+        sfm = SelectFromModel(selection_clf, threshold=0.25)
+        sfm.fit(self.train_X, self.train_y)
+        print(sfm.estimator_.feature_importances_)
+        feature_idx = sfm.get_support()
+        feature_names = self.train_X.columns[feature_idx]
+        self.train_X = self.train_X.loc[:, list(feature_names)]
+        self.test_X = self.test_X.loc[:, list(feature_names)]
+        print(self.train_X.columns)
 
     def build_models(self):
         all_predictions = {}
