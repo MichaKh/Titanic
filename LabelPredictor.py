@@ -20,7 +20,7 @@ class LabelPredictor:
             return None
         else:
             if grid_search and params_grid:
-                grid_classifier = GridSearchCV(classifier, param_grid=params_grid, scoring='accuracy', n_jobs=2, verbose=1, cv=StratifiedKFold(n_splits=10))
+                grid_classifier = GridSearchCV(classifier, param_grid=params_grid, scoring='accuracy', n_jobs=4, verbose=1, cv=StratifiedKFold(n_splits=5))
                 grid_classifier.fit(self.train_X, self.train_y)
                 classifier = grid_classifier.best_estimator_
             else:

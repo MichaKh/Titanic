@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-def prepare_data(train_data_df, class_col, features_cols, one_hot_encoding_features):
+def prepare_data(train_data_df, class_col, features_cols, one_hot_encoding_features=[]):
     """
     Split the data to features and label column, i.e., X and y.
     Encode the categorical features to numeric encoding (to fit "sklearn" implementations)
@@ -16,12 +16,15 @@ def prepare_data(train_data_df, class_col, features_cols, one_hot_encoding_featu
     """
     data_X, data_y = split_features_and_label(train_data_df, class_col, features_cols)
 
-    reg_encoding_cols = data_X.loc[:, [f not in one_hot_encoding_features for f in features_cols]]
-    data_X_reg_encoding = encode_features(reg_encoding_cols)
     if one_hot_encoding_features:
+        reg_encoding_cols = data_X.loc[:, [f not in one_hot_encoding_features for f in features_cols]]
+        data_X_reg_encoding = encode_features(reg_encoding_cols)
+
         one_hot_data_X = data_X.loc[:, one_hot_encoding_features]
         data_X_one_hot_encoded = encode_one_hot_features(one_hot_data_X)
         data_X = pd.concat([data_X_reg_encoding, data_X_one_hot_encoded], axis=1)
+    else:
+        data_X = encode_features(data_X)
     return data_X, data_y
 
 

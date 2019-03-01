@@ -34,6 +34,9 @@ def clean_data(data_df, data_types):
     cleaned_data_df['Age'] = cleaned_data_df['Age'].apply(lambda age: round_age(age))
     cleaned_data_df['Age_Intervals'] = cleaned_data_df['Age'].apply(lambda age: get_discrete_age_intervals(age))
 
+    # Determine whether the passenger is a female with children
+    cleaned_data_df['is_Female_with_Children'] = cleaned_data_df[['Age', 'Sex', 'Parch']].apply(lambda sex_age_parch: get_is_female_with_children(sex_age_parch), axis=1)
+
     # Calculate total fare per passenger
     cleaned_data_df['Fare_Per_Passenger'] = cleaned_data_df[['Fare', 'Family_Members']].apply(lambda fare_family: get_fare_interval_per_passenger(fare_family), axis=1)
 
@@ -182,6 +185,19 @@ def get_is_traveling_alone(x):
         return 'Not_Alone'
 
 
+def get_is_female_with_children(x):
+    sex = x['Sex']
+    age_interval = x['Age']
+    parch = x['Parch']
+    if pd.isnull(sex) or pd.isnull(age_interval) or pd.isnull(parch):
+        return 0
+    else:
+        if age_interval >= 35 and sex == 'female' and parch > 0:
+            return 1
+        else:
+            return 0
+
+
 def get_fare_per_passenger(x):
     total_fare = x['Fare']
     num_of_family_members = x['Family_Members']
@@ -234,7 +250,7 @@ def get_cabin_floor_and_number(x):
     all_assigned_cabins = []
     all_assigned_cabin_numbers = []
     if pd.isnull(x):
-        return 'Unknown', 'Unknown'
+        return 'Main', 'Unknown'
     else:
         all_cabin_nums = x.split(' ')
         for cabin in all_cabin_nums:
@@ -252,4 +268,4 @@ def get_cabin_floor_and_number(x):
                 all_assigned_cabin_numbers.append('0')
             else:
                 all_assigned_cabin_numbers.append(split_cabin_num[1].strip())
-        return [''.join(set(all_assigned_cabins)), '-'.join(all_assigned_cabin_numbers)]
+        return [list(all_assigned_cabins)[0], '-'.join(all_assigned_cabin_numbers)]

@@ -27,7 +27,12 @@ def main():
                   'Fare': 'Numerical',
                   'Cabin_Floor': 'Categorical',
                   'Cabin_Rooms': 'Text',
-                  'Embarked': 'Categorical'}
+                  'Embarked': 'Categorical',
+                  'Family_Members': 'Numerical',
+                  'is_Traveling_Alone': 'Categorical',
+                  'Fare_Per_Passenger': 'Categorical',
+                  'is_Female_with_Children': 'Categorical'
+                  }
     print('Loading train data...')
     train_data_df = DataPreProcessor.load_data(data_train_file_path)
     print('Loading test data...')
@@ -44,15 +49,15 @@ def main():
     cleaned_test_data_df.to_csv("clean_test.csv", index=False)
 
     eval_classifiers = {
-        'TreeClassifier': DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=5, random_state=42),
+        'TreeClassifier': DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=4, random_state=42),
         'AdaBoost': AdaBoostClassifier(base_estimator=DecisionTreeClassifier(), random_state=42),
         'LogisticRegression': LogisticRegression(penalty='l1', max_iter=10000, random_state=42),
-        'RandomForestClassifier': RandomForestClassifier(n_estimators=2000, max_depth=6, min_samples_split=3, random_state=42, class_weight={0: 0.72, 1: 0.28}),
-        'GBTrees': GradientBoostingClassifier(max_depth=5, learning_rate=0.1, n_estimators=2000, random_state=42, min_samples_split=2),
-        'xgboost': XGBClassifier(max_depth=5, n_estimators=2000, random_state=42, learning_rate=0.1, min_samples_split=2),
+        'RandomForestClassifier': RandomForestClassifier(n_estimators=2000, max_depth=4, min_samples_split=10, random_state=42, class_weight={0: 0.80, 1: 0.20}),
+        'GBTrees': GradientBoostingClassifier(max_depth=4, learning_rate=0.1, n_estimators=2000, random_state=42, min_samples_split=10),
+        'xgboost': XGBClassifier(max_depth=4, n_estimators=1000, random_state=42, learning_rate=0.1, min_samples_split=10),
         'KNN': KNeighborsClassifier(n_neighbors=3, p=2),
         'SVM': SVC(gamma='auto', tol=1e-3, C=1.5, random_state=42),
-        'GBC': GradientBoostingClassifier(n_estimators=1000, max_depth=5, learning_rate=0.1)
+        'GBC': GradientBoostingClassifier(n_estimators=1000, max_depth=4, learning_rate=0.1)
     }
 
     eval_classifiers_params_grid = {
@@ -82,14 +87,14 @@ def main():
 
     # features_cols = ['Pclass', 'Sex', 'Age_Intevals', 'Family_Members', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor']
     # features_cols = ['Pclass', 'Sex', 'Age_Intevals', 'is_Traveling_Alone', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Cabin_Floor']
-    features_cols = ['Pclass', 'Sex', 'Age', 'Family_Members', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Cabin_Floor']
-    one_hot_encoding_features = ['Name_Affiliation', 'Cabin_Floor', 'Fare_Per_Passenger']
+    features_cols = ['Pclass', 'Sex', 'Age_Intervals', 'Name_Affiliation', 'Cabin_Floor', 'is_Female_with_Children']
+    one_hot_encoding_features = ['Name_Affiliation', 'Cabin_Floor', 'Pclass']
     train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols=features_cols, one_hot_encoding_features=one_hot_encoding_features)
     test_X, test_y = prepare_data(cleaned_test_data_df, class_col='Survived', features_cols=features_cols, one_hot_encoding_features=one_hot_encoding_features)
     evaluator = Evaluator(train_X, train_y, test_X, test_y,  eval_classifiers, eval_classifiers_params_grid)
     # evaluator.select_features(selection_clf=ExtraTreesClassifier(n_estimators=1000, max_depth=4, random_state=42))
 
-    all_predictions, final_prediction = evaluator.build_models(grid_search=True)
+    all_predictions, final_prediction = evaluator.build_models(grid_search=False)
     evaluation_df = evaluator.save_predictions_to_df(all_predictions, final_prediction)
     submission_df = evaluator.save_predictions_for_submission(evaluation_df)
     evaluation_df.to_csv("test_evaluation_results.csv", index=False)
