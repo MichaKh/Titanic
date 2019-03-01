@@ -1,6 +1,5 @@
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, ExtraTreesClassifier
-from sklearn.linear_model import LogisticRegression, Perceptron, LassoCV
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
@@ -45,22 +44,52 @@ def main():
     cleaned_test_data_df.to_csv("clean_test.csv", index=False)
 
     eval_classifiers = {
-        'TreeClassifier': DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=4, random_state=42),
-        'LogisticRegression': LogisticRegression(penalty='l1', max_iter=1000, random_state=42),
-        'RandomForestClassifier': RandomForestClassifier(n_estimators=1000, max_depth=4, random_state=42),
-        'GBTrees': GradientBoostingClassifier(max_depth=6, learning_rate=0.1, n_estimators=1000, random_state=42, min_samples_split=2),
-        'xgboost': XGBClassifier(max_depth=6, n_estimators=1000, random_state=42, learning_rate=0.1, min_samples_split=2),
+        'TreeClassifier': DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=5, random_state=42),
+        'AdaBoost': AdaBoostClassifier(base_estimator=DecisionTreeClassifier(), random_state=42),
+        'LogisticRegression': LogisticRegression(penalty='l1', max_iter=10000, random_state=42),
+        'RandomForestClassifier': RandomForestClassifier(n_estimators=2000, max_depth=6, min_samples_split=3, random_state=42, class_weight={0: 0.72, 1: 0.28}),
+        'GBTrees': GradientBoostingClassifier(max_depth=5, learning_rate=0.1, n_estimators=2000, random_state=42, min_samples_split=2),
+        'xgboost': XGBClassifier(max_depth=5, n_estimators=2000, random_state=42, learning_rate=0.1, min_samples_split=2),
         'KNN': KNeighborsClassifier(n_neighbors=3, p=2),
         'SVM': SVC(gamma='auto', tol=1e-3, C=1.5, random_state=42),
+        'GBC': GradientBoostingClassifier(n_estimators=1000, max_depth=5, learning_rate=0.1)
     }
+
+    eval_classifiers_params_grid = {
+        'TreeClassifier': {'max_depth': [4, 5, 6]},
+        'AdaBoost': {'n_estimators': [100, 200, 500, 1000, 2000],
+                     'learning_rate': [0.2, 0.1, 0.05, 0.01]},
+        'LogisticRegression': {'penalty': ['l1', 'l2']},
+        'RandomForestClassifier': {'n_estimators': [100, 200, 500, 1000, 2000],
+                                   'max_depth': [4, 5, 6],
+                                   'max_features': [0.8, 0.5, 0.2, 0.1]},
+        'GBTrees': {'n_estimators': [100, 500, 1000, 2000],
+                    'max_depth': [4, 5, 6],
+                    'max_features': [0.8, 0.5, 0.2, 0.1],
+                    'learning_rate': [0.2, 0.1, 0.05, 0.01]},
+        'xgboost': {'n_estimators': [100, 500, 1000, 2000],
+                    'max_depth': [4, 5, 6],
+                    'max_features': [0.8, 0.5, 0.2, 0.1],
+                    'learning_rate': [0.2, 0.1, 0.05, 0.01]},
+        'KNN': {'n_neighbors': [2, 3, 4, 5]},
+        'SVM': {'gamma': [0.001, 0.01, 0.1, 1],
+                'C': [1, 10, 50, 100, 200]},
+        'GBC': {'n_estimators': [100, 500, 1000, 2000],
+                'max_depth': [4, 5, 6, 8],
+                'max_features': [0.8, 0.5, 0.2, 0.1],
+                'learning_rate': [0.2, 0.1, 0.05, 0.01]}
+    }
+
     # features_cols = ['Pclass', 'Sex', 'Age_Intevals', 'Family_Members', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Ticket_Code', 'Cabin_Floor']
-    features_cols = ['Pclass', 'Sex', 'Age_Intevals', 'is_Traveling_Alone', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Cabin_Floor']
-    train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols= features_cols)
-    test_X, test_y = prepare_data(cleaned_test_data_df, class_col='Survived', features_cols=features_cols)
-    evaluator = Evaluator(train_X, train_y, test_X, test_y,  eval_classifiers)
+    # features_cols = ['Pclass', 'Sex', 'Age_Intevals', 'is_Traveling_Alone', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Cabin_Floor']
+    features_cols = ['Pclass', 'Sex', 'Age', 'Family_Members', 'Fare_Per_Passenger', 'Embarked', 'Name_Affiliation', 'Cabin_Floor']
+    one_hot_encoding_features = ['Name_Affiliation', 'Cabin_Floor', 'Fare_Per_Passenger']
+    train_X, train_y = prepare_data(cleaned_train_data_df, class_col='Survived', features_cols=features_cols, one_hot_encoding_features=one_hot_encoding_features)
+    test_X, test_y = prepare_data(cleaned_test_data_df, class_col='Survived', features_cols=features_cols, one_hot_encoding_features=one_hot_encoding_features)
+    evaluator = Evaluator(train_X, train_y, test_X, test_y,  eval_classifiers, eval_classifiers_params_grid)
     # evaluator.select_features(selection_clf=ExtraTreesClassifier(n_estimators=1000, max_depth=4, random_state=42))
 
-    all_predictions, final_prediction = evaluator.build_models()
+    all_predictions, final_prediction = evaluator.build_models(grid_search=True)
     evaluation_df = evaluator.save_predictions_to_df(all_predictions, final_prediction)
     submission_df = evaluator.save_predictions_for_submission(evaluation_df)
     evaluation_df.to_csv("test_evaluation_results.csv", index=False)

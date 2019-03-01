@@ -1,26 +1,26 @@
-from sklearn import metrics
 import pandas as pd
+from sklearn import metrics
 from sklearn.feature_selection import SelectFromModel
-from sklearn.linear_model import LassoCV
-from sklearn.svm import LinearSVC
+from sklearn.metrics import accuracy_score, f1_score
 
 from LabelPredictor import LabelPredictor
-from sklearn.metrics import accuracy_score, f1_score
 
 
 class Evaluator:
     eval_classifiers = {}
+    eval_classifiers_params_grid = {}
     train_X = None
     train_y = None
     test_X = None
     test_y = None
 
-    def __init__(self, train_X, train_y, test_X, test_y, eval_classifiers):
+    def __init__(self, train_X, train_y, test_X, test_y, eval_classifiers, eval_classifiers_params_grid):
         self.train_X = train_X
         self.train_y = train_y
         self.test_X = test_X
         self.test_y = test_y
         self.eval_classifiers = eval_classifiers
+        self.eval_classifiers_params_grid = eval_classifiers_params_grid
 
     def select_features(self, selection_clf):
         sfm = SelectFromModel(selection_clf, threshold=0.25)
@@ -32,13 +32,15 @@ class Evaluator:
         self.test_X = self.test_X.loc[:, list(feature_names)]
         print(self.train_X.columns)
 
-    def build_models(self):
+    def build_models(self, grid_search=False):
         all_predictions = {}
         for classifier in self.eval_classifiers:
             clf = self.eval_classifiers[classifier]
             predictor = LabelPredictor(self.train_X, self.train_y, clf)
             trained_clf = predictor.train_classifier(classifier_name=classifier,
-                                                     classifier=clf)
+                                                     classifier=clf,
+                                                     grid_search=grid_search,
+                                                     params_grid=self.eval_classifiers_params_grid[classifier])
             # Predict on test set
             test_predictions = predictor.predict_with_classifier(test_X=self.test_X, classifier_name=classifier,
                                                                  classifier=trained_clf)
@@ -71,10 +73,12 @@ class Evaluator:
             majority_vote_pred.append(maj_vote)
         return pd.Series(majority_vote_pred)
 
-    def evaluate_performance(self, actual_y, pred_y, performance_metric='accuracy'):
+    @staticmethod
+    def evaluate_performance(actual_y, pred_y, performance_metric='accuracy'):
         """
-        Evaluate the performance of predictions on a hold out test set with known class labels.
+        Evaluate the performance of predictions on a hold out set with known class labels.
         Three performance measures are supported: accuracy (default), f1-score and AUC.
+        :param actual_y: Actual class label
         :param pred_y: Predicted class label
         :param performance_metric: One of three performance measures: accuracy, f1-score and AUC
         :return: Float value of performance

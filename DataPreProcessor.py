@@ -35,7 +35,7 @@ def clean_data(data_df, data_types):
     cleaned_data_df['Age_Intervals'] = cleaned_data_df['Age'].apply(lambda age: get_discrete_age_intervals(age))
 
     # Calculate total fare per passenger
-    cleaned_data_df['Fare_Per_Passenger'] = cleaned_data_df[['Fare', 'Family_Members']].apply(lambda fare_family: get_fare_per_passenger(fare_family), axis=1)
+    cleaned_data_df['Fare_Per_Passenger'] = cleaned_data_df[['Fare', 'Family_Members']].apply(lambda fare_family: get_fare_interval_per_passenger(fare_family), axis=1)
 
     # Separate ticket number from ticket code
     data_tickets = cleaned_data_df['Ticket'].apply(lambda ticket: get_ticket_code_and_number(ticket)).apply(pd.Series)
@@ -108,7 +108,7 @@ def check_for_missing_values(data_df):
             if data_df[column].dtype in ['int64', 'float64']:
                 data_df[column] = data_df[column].fillna(np.mean(data_df[column]))
             else:
-                data_df[column] = data_df[column].fillna('Unknown')
+                data_df[column] = data_df[column].fillna(data_df[column].mode().iloc[0])
     return data_df
 
 
@@ -133,7 +133,7 @@ def get_affiliation_first_last_name(x):
             affiliation = 'Unknown'
         else:
             affiliation = first_name_with_affiliation_list[0].strip().replace('.', '')
-            if affiliation in ['Capt', 'Don', 'Major', 'Sir', 'Jonkheer', 'Rev', 'Col', 'Master']:
+            if affiliation in ['Capt', 'Don', 'Dona', 'Major', 'Sir', 'Jonkheer', 'Rev', 'Col', 'Master']:
                 affiliation = 'Master'
             elif affiliation in ['the Countess', 'Mlle', 'Mme']:
                 affiliation = 'Mrs'
@@ -187,7 +187,21 @@ def get_fare_per_passenger(x):
     num_of_family_members = x['Family_Members']
     total_fare = total_fare if not np.isnan(total_fare) else 0
     num_of_family_members = num_of_family_members if not np.isnan(num_of_family_members) else 1
-    return int(total_fare / (num_of_family_members + 1))
+    return int(total_fare / num_of_family_members)
+
+
+def get_fare_interval_per_passenger(x):
+    total_fare = x['Fare']
+    num_of_family_members = x['Family_Members']
+    total_fare = total_fare if not np.isnan(total_fare) else 0
+    num_of_family_members = num_of_family_members if not np.isnan(num_of_family_members) else 1
+    fpp = int(total_fare / num_of_family_members)
+    if fpp <= 7:
+        return 'Low'
+    elif 7 < fpp <= 25:
+        return 'Standard'
+    else:
+        return 'High'
 
 
 def get_ticket_code_and_number(x):

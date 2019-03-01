@@ -1,20 +1,27 @@
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import pandas as pd
 
 
-def prepare_data(train_data_df, class_col, features_cols):
+def prepare_data(train_data_df, class_col, features_cols, one_hot_encoding_features):
     """
     Split the data to features and label column, i.e., X and y.
-    Encode the categorical feautres to numeric encoding (to fit "sklearn" implementations)
+    Encode the categorical features to numeric encoding (to fit "sklearn" implementations)
+    Only provided features will be encoded as one-hot-vectors, rest are encoding with regular categorical encoding
+    :param one_hot_encoding_features: List of features to encode to one-hot vectors
     :param train_data_df: Input data
     :param class_col: Column name representing the class label
     :param features_cols: Column names representing the data features
     :return: Dataframes of X and y.
     """
     data_X, data_y = split_features_and_label(train_data_df, class_col, features_cols)
-    data_X = encode_features(data_X)
-    # data_X = encode_one_hot_features(data_X)
+
+    reg_encoding_cols = data_X.loc[:, [f not in one_hot_encoding_features for f in features_cols]]
+    data_X_reg_encoding = encode_features(reg_encoding_cols)
+    if one_hot_encoding_features:
+        one_hot_data_X = data_X.loc[:, one_hot_encoding_features]
+        data_X_one_hot_encoded = encode_one_hot_features(one_hot_data_X)
+        data_X = pd.concat([data_X_reg_encoding, data_X_one_hot_encoded], axis=1)
     return data_X, data_y
 
 
